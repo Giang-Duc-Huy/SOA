@@ -1,0 +1,17 @@
+{
+  "name": "hospital-management-eda",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "libs/*",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "dev": "npm run dev -w frontend",
+    "lint": "npm run lint -ws"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "patient-service",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/server.ts",
+    "build": "tsc -p tsconfig.json"
+  }
+}
