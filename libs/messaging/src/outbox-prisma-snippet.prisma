@@ -1,0 +1,23 @@
+// Copy this into each service's schema.prisma
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  topic         String
+  payload       String
+  status        String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
+  retryCount    Int       @default(0)
+  lastError     String?
+
+  @@index([status, createdAt])
+}
+
+model ProcessedEvent {
+  eventId     String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+}

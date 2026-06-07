@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "libs/contracts" },
+    { "path": "libs/logger" },
+    { "path": "libs/telemetry" },
+    { "path": "libs/messaging" },
+    { "path": "frontend" },
+    { "path": "services/identity-rbac-service" },
+    { "path": "services/api-gateway" }
+  ]
+}

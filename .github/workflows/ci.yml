@@ -1,0 +1,98 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma client
+        run: npm run db:generate -w identity-rbac-service
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build shared libs
+        run: |
+          npm run build -w @hm/contracts
+          npm run build -w @hm/logger
+          npm run build -w @hm/telemetry
+          npm run build -w @hm/messaging
+
+      - name: Build services
+        run: |
+          npm run build -w identity-rbac-service
+          npm run build -w api-gateway
+
+      - name: Build frontend
+        run: npm run build -w frontend
+
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        service:
+          - identity-rbac-service
+          - api-gateway
+          - frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.service == 'frontend' && 'frontend/Dockerfile' || format('services/{0}/Dockerfile', matrix.service) }}
+          push: false
+          tags: mediflow/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to AWS ECS (Staging)
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Deploy ECS services
+        run: |
+          echo "Deploy staging — configure ECR_REGISTRY and ECS_CLUSTER in GitHub vars/secrets"
+          echo "See infra/aws/README.md for full deployment guide"

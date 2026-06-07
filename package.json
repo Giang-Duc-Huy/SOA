@@ -7,9 +7,24 @@
     "frontend"
   ],
   "scripts": {
-    "build": "npm run build -ws",
-    "dev": "npm run dev -w frontend",
-    "lint": "npm run lint -ws"
+    "build": "npm run build -ws --if-present",
+    "dev:gateway": "npm run dev -w api-gateway",
+    "dev:identity": "npm run dev -w identity-rbac-service",
+    "dev:frontend": "npm run dev -w frontend",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "typecheck": "tsc -b",
+    "test": "npm run test -ws --if-present"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20.17.6",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^8.57.1",
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">=20"

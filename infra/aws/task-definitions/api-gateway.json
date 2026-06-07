@@ -1,0 +1,44 @@
+{
+  "family": "mediflow-api-gateway",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com/mediflow/api-gateway:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 3000, "protocol": "tcp" }],
+      "environment": [
+        { "name": "PORT", "value": "3000" },
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "IDENTITY_SERVICE_URL", "value": "http://identity-rbac-service.mediflow.local:3001" },
+        { "name": "PATIENT_SERVICE_URL", "value": "http://patient-service.mediflow.local:3002" },
+        { "name": "APPOINTMENT_SERVICE_URL", "value": "http://appointment-service.mediflow.local:3003" },
+        { "name": "EMR_SERVICE_URL", "value": "http://emr-service.mediflow.local:3004" },
+        { "name": "ANALYTICS_SERVICE_URL", "value": "http://analytics-service.mediflow.local:3009" }
+      ],
+      "secrets": [
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:ACCOUNT_ID:secret:mediflow/jwt-secret" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mediflow-api-gateway",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ]
+}
