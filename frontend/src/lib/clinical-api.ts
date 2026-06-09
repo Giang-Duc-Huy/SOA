@@ -86,12 +86,13 @@ export interface Prescription {
 
 export async function fetchPatients(
   token: string,
-  params?: { q?: string; status?: string; page?: number }
+  params?: { q?: string; status?: string; page?: number; limit?: number }
 ) {
   const search = new URLSearchParams();
   if (params?.q) search.set("q", params.q);
   if (params?.status) search.set("status", params.status);
   if (params?.page) search.set("page", String(params.page));
+  if (params?.limit) search.set("limit", String(params.limit));
   const qs = search.toString();
 
   const res = await fetch(`${API_BASE}/api/patients${qs ? `?${qs}` : ""}`, {
@@ -115,6 +116,34 @@ export async function createPatient(
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(data),
+  });
+  return handleResponse<Patient>(res);
+}
+
+export async function updatePatient(
+  token: string,
+  id: string,
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    gender: string;
+    phone: string;
+    insuranceNo: string;
+    status: string;
+  }>
+) {
+  const res = await fetch(`${API_BASE}/api/patients/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Patient>(res);
+}
+
+export async function fetchPatient(token: string, id: string) {
+  const res = await fetch(`${API_BASE}/api/patients/${id}`, {
+    headers: authHeaders(token),
   });
   return handleResponse<Patient>(res);
 }

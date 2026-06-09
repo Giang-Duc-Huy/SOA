@@ -13,16 +13,6 @@ const logger = createLogger({ serviceName: SERVICE_NAME });
 async function main() {
   initTelemetry({ serviceName: SERVICE_NAME });
 
-  try {
-    const { kafka, producer } = await startOutboxRelay();
-    await startAppointmentCompletedConsumer(kafka, producer, logger);
-    logger.info("Appointment completed consumer started");
-  } catch (err) {
-    logger.warn("Kafka messaging not started (may be unavailable)", {
-      error: String(err),
-    });
-  }
-
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -46,6 +36,18 @@ async function main() {
   app.listen(PORT, () => {
     logger.info(`${SERVICE_NAME} listening on port ${PORT}`);
   });
+
+  void (async () => {
+    try {
+      const { kafka, producer } = await startOutboxRelay();
+      await startAppointmentCompletedConsumer(kafka, producer, logger);
+      logger.info("Appointment completed consumer started");
+    } catch (err) {
+      logger.warn("Kafka messaging not started (may be unavailable)", {
+        error: String(err),
+      });
+    }
+  })();
 }
 
 main().catch((err) => {

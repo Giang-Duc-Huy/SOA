@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "test": "echo \"No tests yet\""
@@ -17,6 +17,6 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "ts-node-dev": "^2.0.0"
+    "tsx": "^4.19.2"
   }
 }

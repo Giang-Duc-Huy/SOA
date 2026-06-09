@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import { createProxyMiddleware, fixRequestBody } from "http-proxy-middleware";
 import { createLogger } from "@hm/logger";
 import { initTelemetry, metricsMiddleware, registerHealthRoutes } from "@hm/telemetry";
 import { SERVICE_ROUTES, WRITE_METHODS, WRITE_PERMISSION_MAP } from "./config.js";
@@ -52,21 +52,16 @@ async function main() {
       route.path,
       authMiddleware,
       createProxyMiddleware({
-        target: route.target,
+        target: `${route.target}${route.path}`,
         changeOrigin: true,
         on: {
-          proxyReq: (proxyReq, req) => {
+          proxyReq: (proxyReq, req, res) => {
             logger.debug("Proxying request", {
               method: req.method,
               path: req.url,
               target: route.target,
             });
-            if (req.body && Object.keys(req.body).length > 0) {
-              const bodyData = JSON.stringify(req.body);
-              proxyReq.setHeader("Content-Type", "application/json");
-              proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-              proxyReq.write(bodyData);
-            }
+            fixRequestBody(proxyReq, req, res);
           },
           error: (err, _req, res) => {
             logger.error("Proxy error", { error: err.message, target: route.target });

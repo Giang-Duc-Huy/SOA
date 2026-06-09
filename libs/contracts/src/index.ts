@@ -92,7 +92,7 @@ export function buildEvent<T extends z.ZodTypeAny>(
     occurredAt?: string;
     version?: number;
   },
-  payload: z.infer<T>
+  payload: z.infer<T> extends { payload: infer P } ? P : z.infer<T>
 ) {
   return schema.parse({
     ...meta,

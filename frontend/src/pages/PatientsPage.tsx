@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Plus, Download, Eye, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { fetchPatients, createPatient, type Patient } from "../lib/clinical-api";
+import { fetchPatients, createPatient, updatePatient, fetchPatient, type Patient } from "../lib/clinical-api";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   ACTIVE: { label: "Đang theo dõi", className: "bg-sky-100 text-sky-700" },
@@ -30,6 +30,8 @@ export function PatientsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -61,10 +63,41 @@ export function PatientsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-    await createPatient(token, form);
-    setShowForm(false);
+    if (editingPatient) {
+      await updatePatient(token, editingPatient.id, form);
+      setEditingPatient(null);
+    } else {
+      await createPatient(token, form);
+      setShowForm(false);
+    }
     setForm({ firstName: "", lastName: "", dateOfBirth: "", gender: "MALE", phone: "", insuranceNo: "" });
     load();
+  };
+
+  const openEdit = async (id: string) => {
+    if (!token) return;
+    const patient = await fetchPatient(token, id);
+    setEditingPatient(patient);
+    setForm({
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      dateOfBirth: patient.dateOfBirth,
+      gender: patient.gender,
+      phone: patient.phone ?? "",
+      insuranceNo: patient.insuranceNo ?? "",
+    });
+  };
+
+  const openView = async (id: string) => {
+    if (!token) return;
+    const patient = await fetchPatient(token, id);
+    setViewPatient(patient);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingPatient(null);
+    setForm({ firstName: "", lastName: "", dateOfBirth: "", gender: "MALE", phone: "", insuranceNo: "" });
   };
 
   return (
@@ -155,8 +188,18 @@ export function PatientsPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex gap-2">
-                          <button className="p-1.5 text-gray-400 hover:text-primary rounded"><Eye size={16} /></button>
-                          <button className="p-1.5 text-gray-400 hover:text-primary rounded"><Pencil size={16} /></button>
+                          <button
+                            onClick={() => openView(p.id)}
+                            className="p-1.5 text-gray-400 hover:text-primary rounded"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => openEdit(p.id)}
+                            className="p-1.5 text-gray-400 hover:text-primary rounded"
+                          >
+                            <Pencil size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -178,10 +221,12 @@ export function PatientsPage() {
         </div>
       </div>
 
-      {showForm && (
+      {(showForm || editingPatient) && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleCreate} className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-4">
-            <h2 className="text-lg font-semibold">Thêm bệnh nhân mới</h2>
+            <h2 className="text-lg font-semibold">
+              {editingPatient ? "Chỉnh sửa bệnh nhân" : "Thêm bệnh nhân mới"}
+            </h2>
             <div className="grid grid-cols-2 gap-3">
               <input required placeholder="Họ" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" />
               <input required placeholder="Tên" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className="border rounded-lg px-3 py-2 text-sm" />
@@ -195,10 +240,37 @@ export function PatientsPage() {
             <input placeholder="Số điện thoại" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
             <input placeholder="Số bảo hiểm" value={form.insuranceNo} onChange={(e) => setForm({ ...form, insuranceNo: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm" />
             <div className="flex gap-2 justify-end">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600">Hủy</button>
-              <button type="submit" className="px-4 py-2 text-sm bg-primary text-white rounded-lg">Lưu</button>
+              <button type="button" onClick={closeForm} className="px-4 py-2 text-sm text-gray-600">Hủy</button>
+              <button type="submit" className="px-4 py-2 text-sm bg-primary text-white rounded-lg">
+                {editingPatient ? "Cập nhật" : "Lưu"}
+              </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {viewPatient && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-3">
+            <h2 className="text-lg font-semibold">Chi tiết bệnh nhân</h2>
+            <div className="space-y-2 text-sm">
+              <p><span className="text-gray-500">Mã BN:</span> <span className="font-mono text-primary">{viewPatient.mrn}</span></p>
+              <p><span className="text-gray-500">Họ tên:</span> {viewPatient.fullName}</p>
+              <p><span className="text-gray-500">Ngày sinh:</span> {formatDate(viewPatient.dateOfBirth)}</p>
+              <p><span className="text-gray-500">Giới tính:</span> {genderLabel[viewPatient.gender] ?? viewPatient.gender}</p>
+              <p><span className="text-gray-500">Điện thoại:</span> {viewPatient.phone ?? "—"}</p>
+              <p><span className="text-gray-500">Bảo hiểm:</span> {viewPatient.insuranceNo ?? "—"}</p>
+              <p>
+                <span className="text-gray-500">Trạng thái:</span>{" "}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${statusConfig[viewPatient.status]?.className}`}>
+                  {statusConfig[viewPatient.status]?.label ?? viewPatient.status}
+                </span>
+              </p>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button onClick={() => setViewPatient(null)} className="px-4 py-2 text-sm text-gray-600">Đóng</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

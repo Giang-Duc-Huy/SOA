@@ -6,7 +6,7 @@ import {
   LabResultReadyEventSchema,
   buildEvent,
 } from "@hm/contracts";
-import type { LabOrderType } from "@prisma/client";
+import type { LabOrderType } from "../generated/client/index.js";
 import { prisma } from "../db/prisma.js";
 import { publishEvent } from "../kafka/producer.js";
 

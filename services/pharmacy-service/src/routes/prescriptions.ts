@@ -3,7 +3,17 @@ import { prescriptionService } from "../services/prescription.service.js";
 
 const router = Router();
 
-/** POST /api/v1/prescriptions/:id/dispense — dispense prescription */
+router.get("/", async (_req, res) => {
+  try {
+    const prescriptions = await prescriptionService.list();
+    res.json(prescriptions);
+  } catch (err) {
+    console.error("[pharmacy] list prescriptions error:", err);
+    res.status(500).json({ error: "Failed to list prescriptions" });
+  }
+});
+
+/** POST /api/pharmacy/prescriptions/:id/dispense — dispense prescription */
 router.post("/:id/dispense", async (req, res) => {
   try {
     const result = await prescriptionService.dispense(req.params.id);

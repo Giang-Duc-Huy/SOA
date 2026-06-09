@@ -53,4 +53,14 @@ router.get("/summary", async (_req, res) => {
   }
 });
 
+router.get("/dashboard", async (_req, res) => {
+  try {
+    const data = await analyticsService.getDashboard();
+    res.json(data);
+  } catch (err) {
+    console.error("[analytics] dashboard error:", err);
+    res.status(500).json({ error: "Failed to get dashboard stats" });
+  }
+});
+
 export default router;

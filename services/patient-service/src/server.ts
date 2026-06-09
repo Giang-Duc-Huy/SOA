@@ -12,14 +12,6 @@ const logger = createLogger({ serviceName: SERVICE_NAME });
 async function main() {
   initTelemetry({ serviceName: SERVICE_NAME });
 
-  try {
-    await startOutboxRelay();
-  } catch (err) {
-    logger.warn("Outbox relay not started (Kafka may be unavailable)", {
-      error: String(err),
-    });
-  }
-
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -42,6 +34,12 @@ async function main() {
 
   app.listen(PORT, () => {
     logger.info(`${SERVICE_NAME} listening on port ${PORT}`);
+  });
+
+  void startOutboxRelay().catch((err) => {
+    logger.warn("Outbox relay not started (Kafka may be unavailable)", {
+      error: String(err),
+    });
   });
 }
 

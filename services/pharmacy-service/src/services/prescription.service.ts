@@ -22,6 +22,13 @@ interface CreatePrescriptionInput {
 }
 
 export const prescriptionService = {
+  async list() {
+    return prisma.prescription.findMany({
+      include: { items: { include: { medicine: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
   async createFromEvent(input: CreatePrescriptionInput) {
     if (input.prescriptionId) {
       const existing = await prisma.prescription.findUnique({

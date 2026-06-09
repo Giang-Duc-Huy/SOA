@@ -14,7 +14,7 @@ export function createApp() {
     res.json({ status: "ok", service: SERVICE_NAME });
   });
 
-  app.use("/api/v1/lab-orders", labOrderRoutes);
+  app.use("/api/lab", labOrderRoutes);
 
   return app;
 }

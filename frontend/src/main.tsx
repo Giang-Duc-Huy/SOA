@@ -5,7 +5,11 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppLayout } from "./components/Layout/AppLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { BillingPage } from "./pages/BillingPage";
+import { ReportsPage } from "./pages/ReportsPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { LabPage } from "./pages/LabPage";
+import { PharmacyPage } from "./pages/PharmacyPage";
 import { PatientsPage } from "./pages/PatientsPage";
 import { AppointmentsPage } from "./pages/AppointmentsPage";
 import { EMRPage } from "./pages/EMRPage";
@@ -39,9 +43,11 @@ function AppRoutes() {
         <Route path="/patients" element={<PatientsPage />} />
         <Route path="/appointments" element={<AppointmentsPage />} />
         <Route path="/emr" element={<EMRPage />} />
-        <Route path="/billing" element={<PlaceholderPage title="Billing" description="Hóa đơn & thanh toán — Billing Service (Tính)" />} />
-        <Route path="/reports" element={<PlaceholderPage title="Reports" description="Báo cáo & Analytics — Analytics Service (Tính)" />} />
-        <Route path="/settings" element={<PlaceholderPage title="Settings" description="Cài đặt hệ thống & quản lý người dùng — Identity/RBAC (Huy)" />} />
+        <Route path="/lab" element={<LabPage />} />
+        <Route path="/pharmacy" element={<PharmacyPage />} />
+        <Route path="/billing" element={<BillingPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

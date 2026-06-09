@@ -6,7 +6,7 @@ import {
   EVENT_TYPES,
   buildEvent,
 } from "@hm/contracts";
-import type { InvoiceStatus } from "@prisma/client";
+import type { InvoiceStatus } from "../generated/client/index.js";
 import { prisma } from "../db/prisma.js";
 import { publishEvent } from "../kafka/producer.js";
 

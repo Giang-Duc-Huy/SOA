@@ -15,8 +15,8 @@ export function createApp() {
     res.json({ status: "ok", service: SERVICE_NAME });
   });
 
-  app.use("/api/v1/medicines", medicineRoutes);
-  app.use("/api/v1/prescriptions", prescriptionRoutes);
+  app.use("/api/pharmacy/medicines", medicineRoutes);
+  app.use("/api/pharmacy/prescriptions", prescriptionRoutes);
 
   return app;
 }

@@ -42,20 +42,27 @@ npm install
 docker compose up -d zookeeper kafka postgres prometheus grafana
 ```
 
-### 3. Identity Service
+### 3. Thiết lập database
 
 ```bash
-cd services/identity-rbac-service
-cp .env.example .env
-npx prisma db push
-npm run db:seed -w identity-rbac-service
-npm run dev -w identity-rbac-service
+node scripts/setup-env.mjs
+npm run db:push:all
 ```
 
-### 4. API Gateway
+### 4. Khởi động các services
 
 ```bash
+# Terminal riêng cho mỗi service
+npm run dev -w identity-rbac-service
 npm run dev -w api-gateway
+npm run dev -w patient-service
+npm run dev -w appointment-service
+npm run dev -w emr-service
+npm run dev -w clinical-service
+npm run dev -w lab-radiology-service
+npm run dev -w pharmacy-service
+npm run dev -w billing-service
+npm run dev -w analytics-service
 ```
 
 ### 5. Frontend
