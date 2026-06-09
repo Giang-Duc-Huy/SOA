@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PrescriptionStatus {
+  PENDING
+  DISPENSED
+  CANCELLED
+}
+
+model Medicine {
+  id                String             @id @default(uuid())
+  name              String
+  unit              String
+  stockQuantity     Int                @default(0)
+  lowStockThreshold Int                @default(10)
+  price             Decimal            @db.Decimal(12, 2)
+  expiredAt         DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  prescriptionItems PrescriptionItem[]
+}
+
+model Prescription {
+  id            String             @id @default(uuid())
+  patientId     String
+  appointmentId String?
+  status        PrescriptionStatus @default(PENDING)
+  createdAt     DateTime           @default(now())
+  items         PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(uuid())
+  prescriptionId String
+  medicineId     String
+  quantity       Int
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+}

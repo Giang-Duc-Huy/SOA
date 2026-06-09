@@ -19,3 +19,5 @@ export const NotificationSendRequestedEventSchema = createEventEnvelope(
   eventType: z.literal(EVENT_TYPES.NOTIFICATION_SEND_REQUESTED),
   aggregateType: z.literal("Notification"),
 });
+
+export type NotificationSendRequestedPayload = z.infer<typeof NotificationSendRequestedPayloadSchema>;

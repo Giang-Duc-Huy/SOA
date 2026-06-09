@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RevenueMetric {
+  id        String   @id @default(uuid())
+  invoiceId String
+  amount    Decimal  @db.Decimal(12, 2)
+  paidAt    DateTime
+  createdAt DateTime @default(now())
+}
+
+model AppointmentMetric {
+  id            String   @id @default(uuid())
+  appointmentId String
+  patientId     String
+  status        String
+  createdAt     DateTime @default(now())
+}
+
+model PharmacyMetric {
+  id            String   @id @default(uuid())
+  medicineId    String
+  medicineName  String
+  stockQuantity Int
+  eventType     String
+  createdAt     DateTime @default(now())
+}
+
+model LabMetric {
+  id         String   @id @default(uuid())
+  labOrderId String
+  type       String
+  status     String
+  createdAt  DateTime @default(now())
+}

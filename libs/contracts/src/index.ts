@@ -6,8 +6,10 @@ export * from "./events/emr.js";
 export * from "./events/lab.js";
 export * from "./events/pharmacy.js";
 export * from "./events/billing.js";
+export * from "./events/clinical.js";
 export * from "./events/notification.js";
 export * from "./events/analytics.js";
+export * from "./schemas/index.js";
 
 import { z } from "zod";
 import {
@@ -23,8 +25,18 @@ import {
   EmrEncounterCreatedEventSchema,
   EmrEncounterCompletedEventSchema,
 } from "./events/emr.js";
-import { LabOrderCreatedEventSchema, LabResultReadyEventSchema } from "./events/lab.js";
 import {
+  LabOrderCreatedEventSchema,
+  LabOrderRequestedEventSchema,
+  LabResultReadyEventSchema,
+} from "./events/lab.js";
+import {
+  ClinicalLabOrderRequestedEventSchema,
+  ClinicalPrescriptionIssuedEventSchema,
+  ClinicalServiceCompletedEventSchema,
+} from "./events/clinical.js";
+import {
+  PharmacyPrescriptionDispensedEventSchema,
   PharmacyPrescriptionIssuedEventSchema,
   PharmacyStockLowEventSchema,
 } from "./events/pharmacy.js";
@@ -43,9 +55,14 @@ export const AllEventSchemas = {
   "appointment.completed": AppointmentCompletedEventSchema,
   "emr.encounter-created": EmrEncounterCreatedEventSchema,
   "emr.encounter-completed": EmrEncounterCompletedEventSchema,
+  "lab.order-requested": LabOrderRequestedEventSchema,
   "lab.order-created": LabOrderCreatedEventSchema,
   "lab.result-ready": LabResultReadyEventSchema,
+  "clinical.service-completed": ClinicalServiceCompletedEventSchema,
+  "clinical.prescription-issued": ClinicalPrescriptionIssuedEventSchema,
+  "clinical.lab-order-requested": ClinicalLabOrderRequestedEventSchema,
   "pharmacy.prescription-issued": PharmacyPrescriptionIssuedEventSchema,
+  "pharmacy.prescription-dispensed": PharmacyPrescriptionDispensedEventSchema,
   "pharmacy.stock-low": PharmacyStockLowEventSchema,
   "billing.invoice-created": BillingInvoiceCreatedEventSchema,
   "billing.invoice-paid": BillingInvoicePaidEventSchema,
