@@ -17,12 +17,24 @@ export const PharmacyPrescriptionIssuedPayloadSchema = z.object({
   ),
 });
 
+export const PharmacyPrescriptionDispensedPayloadSchema = z.object({
+  prescriptionId: z.string().uuid(),
+  patientId: z.string().uuid(),
+  dispensedAt: z.string().datetime(),
+  items: z.array(
+    z.object({
+      medicineId: z.string().uuid(),
+      medicineName: z.string(),
+      quantity: z.number().int().positive(),
+    })
+  ),
+});
+
 export const PharmacyStockLowPayloadSchema = z.object({
-  drugCode: z.string(),
-  drugName: z.string(),
-  currentStock: z.number().int(),
-  reorderLevel: z.number().int(),
-  warehouseId: z.string().uuid().optional(),
+  medicineId: z.string().uuid(),
+  medicineName: z.string(),
+  stockQuantity: z.number().int(),
+  lowStockThreshold: z.number().int(),
 });
 
 export const PharmacyPrescriptionIssuedEventSchema = createEventEnvelope(
@@ -32,7 +44,18 @@ export const PharmacyPrescriptionIssuedEventSchema = createEventEnvelope(
   aggregateType: z.literal("Prescription"),
 });
 
+export const PharmacyPrescriptionDispensedEventSchema = createEventEnvelope(
+  PharmacyPrescriptionDispensedPayloadSchema
+).extend({
+  eventType: z.literal(EVENT_TYPES.PHARMACY_PRESCRIPTION_DISPENSED),
+  aggregateType: z.literal("Prescription"),
+});
+
 export const PharmacyStockLowEventSchema = createEventEnvelope(PharmacyStockLowPayloadSchema).extend({
   eventType: z.literal(EVENT_TYPES.PHARMACY_STOCK_LOW),
   aggregateType: z.literal("Inventory"),
 });
+
+export type PharmacyPrescriptionIssuedPayload = z.infer<typeof PharmacyPrescriptionIssuedPayloadSchema>;
+export type PharmacyPrescriptionDispensedPayload = z.infer<typeof PharmacyPrescriptionDispensedPayloadSchema>;
+export type PharmacyStockLowPayload = z.infer<typeof PharmacyStockLowPayloadSchema>;

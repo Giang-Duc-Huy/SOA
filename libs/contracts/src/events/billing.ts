@@ -39,3 +39,6 @@ export const BillingInvoicePaidEventSchema = createEventEnvelope(BillingInvoiceP
   eventType: z.literal(EVENT_TYPES.BILLING_INVOICE_PAID),
   aggregateType: z.literal("Invoice"),
 });
+
+export type BillingInvoiceCreatedPayload = z.infer<typeof BillingInvoiceCreatedPayloadSchema>;
+export type BillingInvoicePaidPayload = z.infer<typeof BillingInvoicePaidPayloadSchema>;
