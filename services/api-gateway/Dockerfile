@@ -5,7 +5,12 @@ COPY package.json ./
 COPY libs ./libs
 COPY services/api-gateway ./services/api-gateway
 
-RUN npm install -w api-gateway -w @hm/logger -w @hm/telemetry --include-workspace-root
+COPY tsconfig.base.json ./
+
+RUN npm install -w api-gateway -w @hm/logger -w @hm/telemetry -w @hm/contracts --include-workspace-root
+
+# Build shared workspace libraries so their `dist` and type declarations exist
+RUN npm run build -w @hm/logger -w @hm/telemetry -w @hm/contracts
 WORKDIR /app/services/api-gateway
 RUN npm run build
 

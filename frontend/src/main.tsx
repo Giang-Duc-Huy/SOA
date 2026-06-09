@@ -6,6 +6,9 @@ import { AppLayout } from "./components/Layout/AppLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { PatientsPage } from "./pages/PatientsPage";
+import { AppointmentsPage } from "./pages/AppointmentsPage";
+import { EMRPage } from "./pages/EMRPage";
 import "./index.css";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,9 +36,9 @@ function AppRoutes() {
         }
       >
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/patients" element={<PlaceholderPage title="Patients" description="Quản lý hồ sơ bệnh nhân — Patient Service (Vững)" />} />
-        <Route path="/appointments" element={<PlaceholderPage title="Appointments" description="Đặt lịch, hủy lịch — Appointment Service (Vững)" />} />
-        <Route path="/emr" element={<PlaceholderPage title="EMR" description="Hồ sơ bệnh án điện tử — EMR Service (Vững)" />} />
+        <Route path="/patients" element={<PatientsPage />} />
+        <Route path="/appointments" element={<AppointmentsPage />} />
+        <Route path="/emr" element={<EMRPage />} />
         <Route path="/billing" element={<PlaceholderPage title="Billing" description="Hóa đơn & thanh toán — Billing Service (Tính)" />} />
         <Route path="/reports" element={<PlaceholderPage title="Reports" description="Báo cáo & Analytics — Analytics Service (Tính)" />} />
         <Route path="/settings" element={<PlaceholderPage title="Settings" description="Cài đặt hệ thống & quản lý người dùng — Identity/RBAC (Huy)" />} />

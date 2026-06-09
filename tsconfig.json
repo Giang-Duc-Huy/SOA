@@ -7,6 +7,10 @@
     { "path": "libs/messaging" },
     { "path": "frontend" },
     { "path": "services/identity-rbac-service" },
-    { "path": "services/api-gateway" }
+    { "path": "services/api-gateway" },
+    { "path": "services/patient-service" },
+    { "path": "services/appointment-service" },
+    { "path": "services/emr-service" },
+    { "path": "services/clinical-service" }
   ]
 }

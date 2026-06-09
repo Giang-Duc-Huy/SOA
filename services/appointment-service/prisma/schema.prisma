@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Appointment {
+  id              String    @id @default(uuid())
+  patientId       String
+  patientName     String?
+  doctorId        String
+  doctorName      String?
+  scheduledAt     DateTime
+  endAt           DateTime?
+  department      String
+  room            String?
+  reason          String?
+  appointmentType String?
+  specialty       String?
+  status          String    @default("BOOKED")
+  cancelledAt     DateTime?
+  cancelReason    String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([scheduledAt])
+  @@index([patientId])
+  @@index([doctorId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  topic         String
+  payload       String
+  status        String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
+  retryCount    Int       @default(0)
+  lastError     String?
+
+  @@index([status, createdAt])
+}
+
+model ProcessedEvent {
+  eventId     String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+}

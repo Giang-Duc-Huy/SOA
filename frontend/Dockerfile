@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package.json ./
 COPY frontend ./frontend
 
+COPY tsconfig.base.json ./
+
 RUN npm install -w frontend --include-workspace-root
 WORKDIR /app/frontend
 RUN npm run build
