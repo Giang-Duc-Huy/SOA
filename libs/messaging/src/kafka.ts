@@ -41,6 +41,6 @@ export async function createConsumer(
 }
 
 export function getBrokersFromEnv(): string[] {
-  const brokers = process.env.KAFKA_BROKERS ?? "localhost:9092";
+  const brokers = process.env.KAFKA_BROKERS ?? "localhost:29092";
   return brokers.split(",").map((b) => b.trim());
 }

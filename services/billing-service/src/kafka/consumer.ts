@@ -20,29 +20,33 @@ const handlers: Record<string, EventHandler> = {
 
 /** Start Kafka consumer — subscribes to appointment & clinical topics */
 export async function startConsumer(): Promise<void> {
-  const consumer = getKafka().consumer({ groupId: `${SERVICE_NAME}-group` });
-  await consumer.connect();
+  try {
+    const consumer = getKafka().consumer({ groupId: `${SERVICE_NAME}-group` });
+    await consumer.connect();
 
-  const topics = [APPOINTMENT_EVENTS, CLINICAL_EVENTS];
-  await consumer.subscribe({ topics, fromBeginning: false });
+    const topics = [APPOINTMENT_EVENTS, CLINICAL_EVENTS];
+    await consumer.subscribe({ topics, fromBeginning: false });
 
-  await consumer.run({
-    eachMessage: async ({ topic, message }) => {
-      try {
-        const raw = message.value?.toString();
-        if (!raw) return;
+    await consumer.run({
+      eachMessage: async ({ topic, message }) => {
+        try {
+          const raw = message.value?.toString();
+          if (!raw) return;
 
-        const parsed = JSON.parse(raw) as { eventType?: string };
-        const handler = parsed.eventType ? handlers[parsed.eventType] : undefined;
+          const parsed = JSON.parse(raw) as { eventType?: string };
+          const handler = parsed.eventType ? handlers[parsed.eventType] : undefined;
 
-        if (handler) {
-          await handler(JSON.parse(raw));
+          if (handler) {
+            await handler(JSON.parse(raw));
+          }
+        } catch (err) {
+          console.error(`[${SERVICE_NAME}] Kafka consumer error on ${topic}:`, err);
         }
-      } catch (err) {
-        console.error(`[${SERVICE_NAME}] Kafka consumer error on ${topic}:`, err);
-      }
-    },
-  });
+      },
+    });
 
-  console.log(`[${SERVICE_NAME}] Kafka consumer started on topics:`, topics);
+    console.log(`[${SERVICE_NAME}] Kafka consumer started on topics:`, topics);
+  } catch (err) {
+    console.warn(`[${SERVICE_NAME}] Kafka consumer not started (may be unavailable):`, err);
+  }
 }

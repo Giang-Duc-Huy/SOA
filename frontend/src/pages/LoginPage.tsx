@@ -72,9 +72,7 @@ export function LoginPage() {
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
 
-          <p className="text-xs text-gray-400 text-center">
-            Demo: dr.smith@mediflow.local / password123
-          </p>
+          
         </form>
       </div>
     </div>

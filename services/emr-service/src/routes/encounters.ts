@@ -116,6 +116,7 @@ router.patch("/:id", async (req, res) => {
   const data = parsed.data;
   const updateData: Prisma.EncounterUpdateInput = {};
   if (data.chiefComplaint !== undefined) updateData.chiefComplaint = data.chiefComplaint;
+  if (data.department !== undefined) updateData.department = data.department;
   if (data.status !== undefined) updateData.status = data.status;
   if (data.summary !== undefined) updateData.summary = data.summary;
 

@@ -19,6 +19,10 @@
         { "name": "PATIENT_SERVICE_URL", "value": "http://patient-service.mediflow.local:3002" },
         { "name": "APPOINTMENT_SERVICE_URL", "value": "http://appointment-service.mediflow.local:3003" },
         { "name": "EMR_SERVICE_URL", "value": "http://emr-service.mediflow.local:3004" },
+        { "name": "CLINICAL_SERVICE_URL", "value": "http://clinical-service.mediflow.local:3005" },
+        { "name": "LAB_SERVICE_URL", "value": "http://lab-radiology-service.mediflow.local:3006" },
+        { "name": "PHARMACY_SERVICE_URL", "value": "http://pharmacy-service.mediflow.local:3007" },
+        { "name": "BILLING_SERVICE_URL", "value": "http://billing-service.mediflow.local:3008" },
         { "name": "ANALYTICS_SERVICE_URL", "value": "http://analytics-service.mediflow.local:3009" }
       ],
       "secrets": [

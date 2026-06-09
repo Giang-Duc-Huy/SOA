@@ -35,7 +35,10 @@ export function ReportsPage() {
     if (!token) return;
     fetchAnalyticsSummary(token)
       .then(setSummary)
-      .catch(() => setSummary(null))
+      .catch((e) => {
+        setSummary(null);
+        console.warn("Analytics fetch failed:", e);
+      })
       .finally(() => setLoading(false));
   }, [token]);
 
@@ -70,6 +73,9 @@ export function ReportsPage() {
         <p className="text-xs text-gray-500 uppercase tracking-wide">HMS / Reports</p>
         <h1 className="text-2xl font-bold text-gray-800 mt-1">Báo cáo & Analytics</h1>
         <p className="text-sm text-gray-500 mt-1">Tổng quan hoạt động bệnh viện</p>
+        {!summary && !loading && (
+          <p className="text-sm text-amber-600 mt-2">Không tải được dữ liệu — thử đăng xuất và đăng nhập lại.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

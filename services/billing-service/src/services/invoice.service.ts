@@ -167,6 +167,14 @@ export const invoiceService = {
     );
     await publishEvent(BILLING_EVENTS, event);
 
+    // Fallback: sync analytics directly when Kafka may be unavailable
+    const analyticsUrl = process.env.ANALYTICS_SERVICE_URL ?? "http://localhost:3009";
+    fetch(`${analyticsUrl}/api/analytics/internal/revenue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ invoiceId, amount: payAmount, paidAt: paidAt.toISOString() }),
+    }).catch(() => {});
+
     return { invoice: updatedInvoice, payment };
   },
 };

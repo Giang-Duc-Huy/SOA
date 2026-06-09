@@ -1,0 +1,42 @@
+{
+  "family": "mediflow-pharmacy-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "pharmacy-service",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/mediflow/pharmacy-service:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 3007, "protocol": "tcp" }],
+      "environment": [
+        { "name": "PORT", "value": "3007" },
+        { "name": "SERVICE_NAME", "value": "pharmacy-service" },
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "KAFKA_BROKERS", "value": "BOOTSTRAP_SERVER_1:9092,BOOTSTRAP_SERVER_2:9092,BOOTSTRAP_SERVER_3:9092" }
+      ],
+      "secrets": [
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:mediflow/pharmacy-db-url" },
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:mediflow/jwt-secret" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mediflow/pharmacy-service",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:3007/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

@@ -33,44 +33,60 @@ function runBackground(cmd, args) {
 async function main() {
   console.log("=== MediFlow HMS — Local Dev Stack ===\n");
 
-  console.log("[1/4] Starting PostgreSQL...");
+  console.log("[1/6] Starting PostgreSQL...");
   runBackground("node", ["scripts/start-postgres.mjs", "--keep-alive"]);
 
-  // Wait for postgres to be ready
-  for (let i = 0; i < 30; i++) {
-    try {
-      await run("node", ["-e", "import('pg').then(({default:pg})=>{const c=new pg.Client({connectionString:'postgresql://postgres:postgres@localhost:5432/postgres'});return c.connect().then(()=>c.end())})"]);
-      break;
-    } catch {
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    if (i === 29) throw new Error("PostgreSQL did not start in time");
-  }
+  await run("node", ["scripts/wait-postgres.mjs"]);
   console.log("[postgres] Ready\n");
 
-  console.log("[2/4] Setting up environment...");
+  console.log("[2/6] Starting Kafka cluster (docker)...");
+  await run("node", ["scripts/start-kafka.mjs"]);
+
+  console.log("[3/6] Setting up environment...");
   await run("node", ["scripts/setup-env.mjs"]);
 
-  console.log("[3/4] Pushing database schemas...");
-  await run("npm", ["run", "db:push:all"]);
+  console.log("[4/6] Pushing database schemas...");
+  try {
+    await run("npm", ["run", "db:push:all"]);
+  } catch (err) {
+    console.warn("[db] Schema push failed (may already be up-to-date):", err.message);
+    console.warn("[db] Continuing — if services fail, stop all node processes and retry");
+  }
 
-  console.log("[4/4] Starting all services + frontend...\n");
-  await run("npx", [
-    "concurrently",
-    "-n", "identity,gateway,patient,appt,emr,clinical,lab,pharmacy,billing,analytics,frontend",
-    "-c", "blue,green,cyan,yellow,magenta,red,white,gray,blueBright,greenBright,cyanBright",
-    "npm run dev -w identity-rbac-service",
-    "npm run dev -w api-gateway",
-    "npm run dev -w patient-service",
-    "npm run dev -w appointment-service",
-    "npm run dev -w emr-service",
-    "npm run dev -w clinical-service",
-    "npm run dev -w lab-radiology-service",
-    "npm run dev -w pharmacy-service",
-    "npm run dev -w billing-service",
-    "npm run dev -w analytics-service",
-    "npm run dev -w frontend",
-  ]);
+  console.log("[5/6] Seeding dev sample data...");
+  try {
+    await run("node", ["scripts/sync-doctor-permissions.mjs"]);
+    await run("node", ["scripts/seed-dev-data.mjs"]);
+  } catch (err) {
+    console.warn("[seed] Skipped:", err.message);
+  }
+
+  console.log("[6/6] Starting all services + frontend...\n");
+
+  const services = [
+    ["identity", "npm run dev -w identity-rbac-service"],
+    ["gateway", "npm run dev -w api-gateway"],
+    ["patient", "npm run dev -w patient-service"],
+    ["appt", "npm run dev -w appointment-service"],
+    ["emr", "npm run dev -w emr-service"],
+    ["clinical", "npm run dev -w clinical-service"],
+    ["lab", "npm run dev -w lab-radiology-service"],
+    ["pharmacy", "npm run dev -w pharmacy-service"],
+    ["billing", "npm run dev -w billing-service"],
+    ["analytics", "npm run dev -w analytics-service"],
+    ["frontend", "npm run dev -w frontend"],
+  ];
+
+  const names = services.map(([n]) => n).join(",");
+  const colors = "blue,green,cyan,yellow,magenta,red,white,gray,blueBright,greenBright,cyanBright";
+  const cmds = services.map(([, cmd]) => cmd);
+
+  if (isWin) {
+    const quoted = cmds.map((c) => `"${c}"`).join(" ");
+    await run("cmd", ["/c", `npx concurrently -n ${names} -c ${colors} ${quoted}`]);
+  } else {
+    await run("npx", ["concurrently", "-n", names, "-c", colors, ...cmds]);
+  }
 }
 
 main().catch((err) => {

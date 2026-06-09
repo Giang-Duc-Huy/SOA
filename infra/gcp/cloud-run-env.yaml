@@ -1,0 +1,21 @@
+# Cloud Run environment template — replace placeholders before deploy
+api_gateway:
+  PORT: "8080"
+  NODE_ENV: production
+  IDENTITY_SERVICE_URL: "https://mediflow-identity-XXXX.run.app"
+  PATIENT_SERVICE_URL: "https://mediflow-patient-service-XXXX.run.app"
+  APPOINTMENT_SERVICE_URL: "https://mediflow-appointment-service-XXXX.run.app"
+  EMR_SERVICE_URL: "https://mediflow-emr-service-XXXX.run.app"
+  CLINICAL_SERVICE_URL: "https://mediflow-clinical-service-XXXX.run.app"
+  LAB_SERVICE_URL: "https://mediflow-lab-radiology-service-XXXX.run.app"
+  PHARMACY_SERVICE_URL: "https://mediflow-pharmacy-service-XXXX.run.app"
+  BILLING_SERVICE_URL: "https://mediflow-billing-service-XXXX.run.app"
+  ANALYTICS_SERVICE_URL: "https://mediflow-analytics-service-XXXX.run.app"
+
+kafka:
+  KAFKA_BROKERS: "pkc-xxxxx.ap-southeast-1.aws.confluent.cloud:9092"
+  # Use SASL_SSL in production with Confluent API keys
+
+services:
+  desired_min_instances: 2
+  desired_max_instances: 10

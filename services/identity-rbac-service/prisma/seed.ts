@@ -39,6 +39,10 @@ const ROLES = [
       "lab:read",
       "lab:write",
       "pharmacy:read",
+      "pharmacy:write",
+      "billing:read",
+      "billing:write",
+      "analytics:read",
     ],
   },
   {

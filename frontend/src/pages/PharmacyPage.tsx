@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, Package, Pill } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -32,6 +32,8 @@ export function PharmacyPage() {
   const [tab, setTab] = useState<"inventory" | "prescriptions">("inventory");
   const [showForm, setShowForm] = useState(false);
   const [dispensingId, setDispensingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     unit: "viên",
@@ -40,9 +42,10 @@ export function PharmacyPage() {
     price: 10000,
   });
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!token) return;
     setLoading(true);
+    setError(null);
     Promise.all([
       fetchMedicines(token),
       fetchPharmacyPrescriptions(token),
@@ -53,30 +56,42 @@ export function PharmacyPage() {
         setPrescriptions(rx);
         setPatients(pat.data);
       })
-      .catch(() => {
+      .catch((e) => {
         setMedicines([]);
         setPrescriptions([]);
+        setError(e instanceof Error ? e.message : "Không tải được dữ liệu");
       })
       .finally(() => setLoading(false));
-  };
+  }, [token]);
 
-  useEffect(load, [token]);
+  useEffect(load, [load]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
-    await createMedicine(token, form);
-    setShowForm(false);
-    setForm({ name: "", unit: "viên", stockQuantity: 100, lowStockThreshold: 10, price: 10000 });
-    load();
+    if (!token || !form.name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await createMedicine(token, form);
+      setShowForm(false);
+      setForm({ name: "", unit: "viên", stockQuantity: 100, lowStockThreshold: 10, price: 10000 });
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Thêm thuốc thất bại");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDispense = async (id: string) => {
     if (!token) return;
     setDispensingId(id);
+    setError(null);
     try {
       await dispensePrescription(token, id);
       load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Cấp thuốc thất bại");
     } finally {
       setDispensingId(null);
     }
@@ -88,8 +103,12 @@ export function PharmacyPage() {
     if (qty === null) return;
     const n = parseInt(qty, 10);
     if (isNaN(n) || n < 0) return;
-    await updateMedicineStock(token, id, n);
-    load();
+    try {
+      await updateMedicineStock(token, id, n);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Cập nhật tồn kho thất bại");
+    }
   };
 
   return (
@@ -102,7 +121,7 @@ export function PharmacyPage() {
         </div>
         {tab === "inventory" && (
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => { setShowForm(true); setError(null); }}
             className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg"
           >
             <Plus size={16} />
@@ -110,6 +129,10 @@ export function PharmacyPage() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
+      )}
 
       <div className="flex gap-2 border-b border-gray-200">
         <button
@@ -249,57 +272,73 @@ export function PharmacyPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleCreate} className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-4">
             <h2 className="text-lg font-semibold">Thêm thuốc mới</h2>
-            <input
-              required
-              placeholder="Tên thuốc"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            />
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Tên thuốc *</label>
               <input
                 required
-                placeholder="Đơn vị"
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="border rounded-lg px-3 py-2 text-sm"
-              />
-              <input
-                required
-                type="number"
-                min={0}
-                placeholder="Giá (₫)"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                className="border rounded-lg px-3 py-2 text-sm"
+                placeholder="VD: Paracetamol 500mg"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <input
-                required
-                type="number"
-                min={0}
-                placeholder="Tồn kho"
-                value={form.stockQuantity}
-                onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })}
-                className="border rounded-lg px-3 py-2 text-sm"
-              />
-              <input
-                required
-                type="number"
-                min={1}
-                placeholder="Ngưỡng cảnh báo"
-                value={form.lowStockThreshold}
-                onChange={(e) => setForm({ ...form, lowStockThreshold: Number(e.target.value) })}
-                className="border rounded-lg px-3 py-2 text-sm"
-              />
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Đơn vị</label>
+                <input
+                  required
+                  placeholder="viên"
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Giá (₫)</label>
+                <input
+                  required
+                  type="number"
+                  min={0}
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Tồn kho</label>
+                <input
+                  required
+                  type="number"
+                  min={0}
+                  value={form.stockQuantity}
+                  onChange={(e) => setForm({ ...form, stockQuantity: Number(e.target.value) })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Ngưỡng cảnh báo</label>
+                <input
+                  required
+                  type="number"
+                  min={1}
+                  value={form.lowStockThreshold}
+                  onChange={(e) => setForm({ ...form, lowStockThreshold: Number(e.target.value) })}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600">
                 Hủy
               </button>
-              <button type="submit" className="px-4 py-2 text-sm bg-primary text-white rounded-lg">
-                Thêm thuốc
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-4 py-2 text-sm bg-primary text-white rounded-lg disabled:opacity-50"
+              >
+                {saving ? "Đang lưu..." : "Thêm thuốc"}
               </button>
             </div>
           </form>

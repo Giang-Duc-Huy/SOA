@@ -63,4 +63,28 @@ router.get("/dashboard", async (_req, res) => {
   }
 });
 
+/** Internal sync endpoint — called by billing-service when Kafka is unavailable */
+router.post("/internal/revenue", async (req, res) => {
+  try {
+    const { invoiceId, amount, paidAt } = req.body as {
+      invoiceId?: string;
+      amount?: number;
+      paidAt?: string;
+    };
+    if (!invoiceId || amount == null || !paidAt) {
+      res.status(400).json({ error: "invoiceId, amount, paidAt required" });
+      return;
+    }
+    await analyticsService.recordRevenue({
+      invoiceId,
+      amount,
+      paidAt: new Date(paidAt),
+    });
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error("[analytics] internal revenue sync error:", err);
+    res.status(500).json({ error: "Failed to record revenue" });
+  }
+});
+
 export default router;

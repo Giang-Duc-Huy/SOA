@@ -213,6 +213,26 @@ export async function fetchEncounters(token: string, patientId?: string) {
   return handleResponse<{ data: Encounter[] }>(res);
 }
 
+export async function createEncounter(
+  token: string,
+  data: {
+    patientId: string;
+    patientName?: string;
+    department?: string;
+    chiefComplaint?: string;
+    doctorId?: string;
+    doctorName?: string;
+    appointmentId?: string;
+  }
+) {
+  const res = await fetch(`${API_BASE}/api/emr/encounters`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Encounter>(res);
+}
+
 export async function fetchEncounterSummary(token: string, encounterId: string) {
   const res = await fetch(`${API_BASE}/api/clinical/encounters/${encounterId}/summary`, {
     headers: authHeaders(token),
@@ -262,4 +282,26 @@ export async function addPrescription(
     body: JSON.stringify(data),
   });
   return handleResponse<Prescription>(res);
+}
+
+export async function updateEncounter(
+  token: string,
+  id: string,
+  data: Partial<{ chiefComplaint: string; department: string; summary: string; status: string }>
+) {
+  const res = await fetch(`${API_BASE}/api/emr/encounters/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Encounter>(res);
+}
+
+export async function completeEncounter(token: string, id: string, summary?: string) {
+  const res = await fetch(`${API_BASE}/api/emr/encounters/${id}/complete`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ summary }),
+  });
+  return handleResponse<Encounter>(res);
 }

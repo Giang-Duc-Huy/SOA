@@ -12,6 +12,7 @@ export const CreateEncounterSchema = z.object({
 
 export const UpdateEncounterSchema = z.object({
   chiefComplaint: z.string().optional(),
+  department: z.string().optional(),
   status: z.enum(["DRAFT", "ACTIVE", "COMPLETED"]).optional(),
   summary: z.string().optional(),
 });

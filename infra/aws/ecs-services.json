@@ -1,29 +1,138 @@
 {
   "cluster": "mediflow-cluster",
-  "serviceName": "api-gateway",
-  "taskDefinition": "mediflow-api-gateway",
-  "desiredCount": 2,
-  "launchType": "FARGATE",
-  "networkConfiguration": {
-    "awsvpcConfiguration": {
-      "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
-      "securityGroups": ["sg-ALB_AND_ECS"],
-      "assignPublicIp": "DISABLED"
-    }
-  },
-  "loadBalancers": [
+  "services": [
     {
-      "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:ACCOUNT_ID:targetgroup/mediflow-gateway/xxx",
-      "containerName": "api-gateway",
-      "containerPort": 3000
+      "serviceName": "api-gateway",
+      "taskDefinition": "mediflow-api-gateway",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ALB_AND_ECS"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "loadBalancers": [
+        {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:targetgroup/mediflow-gateway/xxx",
+          "containerName": "api-gateway",
+          "containerPort": 3000
+        }
+      ],
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "identity-rbac-service",
+      "taskDefinition": "mediflow-identity-rbac-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "patient-service",
+      "taskDefinition": "mediflow-patient-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "emr-service",
+      "taskDefinition": "mediflow-emr-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "pharmacy-service",
+      "taskDefinition": "mediflow-pharmacy-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "billing-service",
+      "taskDefinition": "mediflow-billing-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "analytics-service",
+      "taskDefinition": "mediflow-analytics-service",
+      "desiredCount": 2,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
     }
-  ],
-  "deploymentConfiguration": {
-    "maximumPercent": 200,
-    "minimumHealthyPercent": 100,
-    "deploymentCircuitBreaker": {
-      "enable": true,
-      "rollback": true
-    }
-  }
+  ]
 }

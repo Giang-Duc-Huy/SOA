@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, CreditCard, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchInvoices, createInvoice, payInvoice, type Invoice } from "../lib/hospital-api";
@@ -27,6 +27,7 @@ export function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     patientId: "",
     description: "",
@@ -34,30 +35,59 @@ export function BillingPage() {
     unitPrice: 0,
   });
 
-  const load = () => {
+  const loadPatients = useCallback(async () => {
+    if (!token) return;
+    try {
+      const pat = await fetchPatients(token, { limit: 100 });
+      setPatients(pat.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không tải được danh sách bệnh nhân");
+    }
+  }, [token]);
+
+  const loadInvoices = useCallback(async () => {
+    if (!token) return;
+    try {
+      const inv = await fetchInvoices(token);
+      setInvoices(inv);
+    } catch {
+      setInvoices([]);
+    }
+  }, [token]);
+
+  const load = useCallback(async () => {
     if (!token) return;
     setLoading(true);
-    Promise.all([fetchInvoices(token), fetchPatients(token, { limit: 100 })])
-      .then(([inv, pat]) => {
-        setInvoices(inv);
-        setPatients(pat.data);
-      })
-      .catch(() => setInvoices([]))
-      .finally(() => setLoading(false));
-  };
+    setError(null);
+    await Promise.all([loadInvoices(), loadPatients()]);
+    setLoading(false);
+  }, [token, loadInvoices, loadPatients]);
 
-  useEffect(load, [token]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const openForm = async () => {
+    setShowForm(true);
+    setError(null);
+    await loadPatients();
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !form.patientId || !form.description || form.unitPrice <= 0) return;
-    await createInvoice(token, {
-      patientId: form.patientId,
-      items: [{ description: form.description, quantity: form.quantity, unitPrice: form.unitPrice }],
-    });
-    setShowForm(false);
-    setForm({ patientId: "", description: "", quantity: 1, unitPrice: 0 });
-    load();
+    setError(null);
+    try {
+      await createInvoice(token, {
+        patientId: form.patientId,
+        items: [{ description: form.description, quantity: form.quantity, unitPrice: form.unitPrice }],
+      });
+      setShowForm(false);
+      setForm({ patientId: "", description: "", quantity: 1, unitPrice: 0 });
+      await loadInvoices();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Tạo hóa đơn thất bại");
+    }
   };
 
   const handlePay = async (id: string) => {
@@ -65,7 +95,9 @@ export function BillingPage() {
     setPayingId(id);
     try {
       await payInvoice(token, id, "CASH");
-      load();
+      await loadInvoices();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Thanh toán thất bại");
     } finally {
       setPayingId(null);
     }
@@ -80,13 +112,17 @@ export function BillingPage() {
           <p className="text-sm text-gray-500 mt-1">Quản lý hóa đơn và xử lý thanh toán</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={openForm}
           className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg"
         >
           <Plus size={16} />
           Tạo hóa đơn
         </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
+      )}
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
@@ -160,19 +196,25 @@ export function BillingPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleCreate} className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl space-y-4">
             <h2 className="text-lg font-semibold">Tạo hóa đơn mới</h2>
-            <select
-              required
-              value={form.patientId}
-              onChange={(e) => setForm({ ...form, patientId: e.target.value })}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="">Chọn bệnh nhân</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.fullName} ({p.mrn})
-                </option>
-              ))}
-            </select>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Bệnh nhân *</label>
+              <select
+                required
+                value={form.patientId}
+                onChange={(e) => setForm({ ...form, patientId: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">Chọn bệnh nhân</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.fullName} ({p.mrn})
+                  </option>
+                ))}
+              </select>
+              {patients.length === 0 && (
+                <p className="text-xs text-amber-600 mt-1">Chưa có bệnh nhân. Thêm bệnh nhân ở tab Patients trước.</p>
+              )}
+            </div>
             <input
               required
               placeholder="Mô tả dịch vụ"

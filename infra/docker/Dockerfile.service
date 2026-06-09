@@ -1,0 +1,36 @@
+# Generic Dockerfile template for HMS microservices with Prisma
+# Usage: docker build -f infra/docker/Dockerfile.service --build-arg SERVICE_NAME=patient-service .
+
+ARG SERVICE_NAME
+FROM node:20-alpine AS builder
+ARG SERVICE_NAME
+WORKDIR /app
+
+COPY package.json tsconfig.base.json ./
+COPY libs ./libs
+COPY services/${SERVICE_NAME} ./services/${SERVICE_NAME}
+
+RUN npm install -w ${SERVICE_NAME} -w @hm/contracts -w @hm/logger -w @hm/telemetry -w @hm/messaging --include-workspace-root
+RUN npm run build -w @hm/logger -w @hm/telemetry -w @hm/contracts -w @hm/messaging
+
+WORKDIR /app/services/${SERVICE_NAME}
+RUN npx prisma generate
+RUN npm run build
+
+FROM node:20-alpine AS runner
+ARG SERVICE_NAME
+WORKDIR /app
+
+RUN apk add --no-cache openssl
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./dist
+COPY --from=builder /app/services/${SERVICE_NAME}/prisma ./prisma
+COPY --from=builder /app/services/${SERVICE_NAME}/src/generated ./src/generated
+COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./package.json
+COPY --from=builder /app/libs ./libs
+
+ENV NODE_ENV=production
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+CMD ["sh", "-c", "npx prisma db push && node dist/server.js"]
