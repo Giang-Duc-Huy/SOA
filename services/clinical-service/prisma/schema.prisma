@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model VitalSign {
+  id          String   @id @default(uuid())
+  encounterId String
+  recordedAt  DateTime @default(now())
+  recordedBy  String?
+  pulse       Int?
+  systolicBp  Int?
+  diastolicBp Int?
+  temperature Float?
+  spo2        Int?
+  notes       String?
+
+  @@index([encounterId, recordedAt])
+}
+
+model Diagnosis {
+  id          String   @id @default(uuid())
+  encounterId String
+  icd10Code   String
+  description String
+  isPrimary   Boolean  @default(false)
+  recordedBy  String?
+  createdAt   DateTime @default(now())
+
+  @@index([encounterId])
+  @@index([icd10Code])
+}
+
+model Prescription {
+  id           String   @id @default(uuid())
+  encounterId  String
+  drugName     String
+  dosage       String
+  frequency    String
+  duration     String?
+  instructions String?
+  prescribedBy String?
+  createdAt    DateTime @default(now())
+
+  @@index([encounterId])
+}

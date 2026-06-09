@@ -25,7 +25,12 @@ jobs:
         run: npm install
 
       - name: Generate Prisma client
-        run: npm run db:generate -w identity-rbac-service
+        run: |
+          npm run db:generate -w identity-rbac-service
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/patient_db npm run db:generate -w patient-service
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/appointment_db npm run db:generate -w appointment-service
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/emr_db npm run db:generate -w emr-service
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/clinical_db npm run db:generate -w clinical-service
 
       - name: Lint
         run: npm run lint
@@ -41,6 +46,10 @@ jobs:
         run: |
           npm run build -w identity-rbac-service
           npm run build -w api-gateway
+          npm run build -w patient-service
+          npm run build -w appointment-service
+          npm run build -w emr-service
+          npm run build -w clinical-service
 
       - name: Build frontend
         run: npm run build -w frontend
