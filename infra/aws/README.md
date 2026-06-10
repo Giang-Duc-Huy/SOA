@@ -73,6 +73,27 @@ Workflow: `.github/workflows/ci.yml`
 
 If AWS is not configured yet, **Lint/Build** and **Docker build** still run; **Deploy** jobs are skipped.
 
+## Monitoring (Prometheus + Grafana)
+
+| Component | ECS service | Image | Port |
+|-----------|-------------|-------|------|
+| Prometheus | `prometheus` | `mediflow/prometheus` | 9090 |
+| Grafana | `grafana` | `mediflow/grafana` | 3000 |
+
+- Prometheus config: `infra/observability/prometheus.ecs.yml` (scrapes all microservices via Cloud Map)
+- Grafana dashboards: `infra/observability/grafana/dashboards/hms-overview.json`
+- Deploy is included in `scripts/ecs-deploy.mjs` (apps + monitoring in one rollout)
+
+### Extra secret for Grafana
+
+| Secret (Secrets Manager) | Description |
+|--------------------------|-------------|
+| `mediflow/grafana-admin-password` | Grafana admin password (`GF_SECURITY_ADMIN_PASSWORD`) |
+
+## Docker image catalog
+
+All images are defined once in `infra/docker/services.json` and built by `scripts/docker-build-all.mjs` (single CI job, no per-service matrix).
+
 ## Environment Variables (per service)
 
 See `task-definitions/*.json` for full list. Key vars:

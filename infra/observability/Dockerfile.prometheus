@@ -1,0 +1,4 @@
+FROM prom/prometheus:v2.54.1
+COPY infra/observability/prometheus.ecs.yml /etc/prometheus/prometheus.yml
+EXPOSE 9090
+CMD ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--web.enable-lifecycle"]

@@ -133,6 +133,49 @@
         "minimumHealthyPercent": 100,
         "deploymentCircuitBreaker": { "enable": true, "rollback": true }
       }
+    },
+    {
+      "serviceName": "prometheus",
+      "taskDefinition": "mediflow-prometheus",
+      "desiredCount": 1,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
+    },
+    {
+      "serviceName": "grafana",
+      "taskDefinition": "mediflow-grafana",
+      "desiredCount": 1,
+      "launchType": "FARGATE",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": ["subnet-PRIVATE_1", "subnet-PRIVATE_2"],
+          "securityGroups": ["sg-ECS_INTERNAL"],
+          "assignPublicIp": "DISABLED"
+        }
+      },
+      "loadBalancers": [
+        {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:targetgroup/mediflow-grafana/xxx",
+          "containerName": "grafana",
+          "containerPort": 3000
+        }
+      ],
+      "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+      }
     }
   ]
 }

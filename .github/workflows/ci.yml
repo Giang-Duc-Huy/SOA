@@ -71,21 +71,6 @@ jobs:
     needs: lint-test-build
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        service:
-          - identity-rbac-service
-          - api-gateway
-          - patient-service
-          - appointment-service
-          - emr-service
-          - clinical-service
-          - lab-radiology-service
-          - pharmacy-service
-          - billing-service
-          - analytics-service
-          - frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -104,32 +89,16 @@ jobs:
         if: github.event_name == 'push' && vars.ECR_REGISTRY != '' && vars.AWS_ACCOUNT_ID != ''
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Resolve image tags
-        id: meta
-        shell: bash
+      - name: Build all images
         run: |
-          local_tag="mediflow/${{ matrix.service }}:${{ github.sha }}"
           if [ "${{ github.event_name }}" = "push" ] && [ -n "${{ vars.ECR_REGISTRY }}" ]; then
-            remote_tag="${{ vars.ECR_REGISTRY }}/mediflow/${{ matrix.service }}"
-            echo "tags<<EOF" >> "$GITHUB_OUTPUT"
-            echo "${remote_tag}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "${remote_tag}:latest" >> "$GITHUB_OUTPUT"
-            echo "EOF" >> "$GITHUB_OUTPUT"
-            echo "push=true" >> "$GITHUB_OUTPUT"
+            node scripts/docker-build-all.mjs \
+              --push \
+              --registry "${{ vars.ECR_REGISTRY }}" \
+              --tag "${{ github.sha }}"
           else
-            echo "tags=$local_tag" >> "$GITHUB_OUTPUT"
-            echo "push=false" >> "$GITHUB_OUTPUT"
+            node scripts/docker-build-all.mjs --tag "${{ github.sha }}"
           fi
-
-      - name: Build and push ${{ matrix.service }}
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.service == 'frontend' && 'frontend/Dockerfile' || format('services/{0}/Dockerfile', matrix.service) }}
-          push: ${{ steps.meta.outputs.push == 'true' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   deploy-staging:
     name: Deploy to AWS ECS (Staging)
@@ -152,39 +121,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Prepare ECS task definitions
+      - name: Deploy apps and monitoring
         run: |
-          node scripts/prepare-ecs-task-defs.mjs \
-            .ecs/task-defs \
-            "${{ vars.ECR_REGISTRY }}" \
-            "${{ vars.AWS_ACCOUNT_ID }}" \
-            "${{ github.sha }}"
-
-      - name: Register task definitions
-        run: |
-          for f in .ecs/task-defs/*.json; do
-            echo "Registering $f..."
-            aws ecs register-task-definition --cli-input-json "file://$f"
-          done
-
-      - name: Update ECS services (rolling deploy)
-        run: |
-          for svc in api-gateway identity-rbac-service patient-service emr-service pharmacy-service billing-service analytics-service; do
-            task_family="mediflow-${svc}"
-            echo "Updating $svc with task family $task_family..."
-            aws ecs update-service \
-              --cluster "${{ vars.ECS_CLUSTER }}" \
-              --service "$svc" \
-              --task-definition "$task_family" \
-              --force-new-deployment \
-              --desired-count 2 || echo "Service $svc not found, skipping"
-          done
-
-      - name: Wait for deployment stability
-        run: |
-          aws ecs wait services-stable \
+          node scripts/ecs-deploy.mjs \
             --cluster "${{ vars.ECS_CLUSTER }}" \
-            --services api-gateway || echo "api-gateway stability wait skipped"
+            --registry "${{ vars.ECR_REGISTRY }}" \
+            --account "${{ vars.AWS_ACCOUNT_ID }}" \
+            --tag "${{ github.sha }}" \
+            --desired-count 2
 
   deploy-production:
     name: Deploy to AWS ECS (Production)
@@ -207,36 +151,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Prepare ECS task definitions
+      - name: Deploy apps and monitoring
         run: |
-          node scripts/prepare-ecs-task-defs.mjs \
-            .ecs/task-defs \
-            "${{ vars.ECR_REGISTRY }}" \
-            "${{ vars.AWS_ACCOUNT_ID }}" \
-            "${{ github.sha }}"
-
-      - name: Register task definitions
-        run: |
-          for f in .ecs/task-defs/*.json; do
-            echo "Registering $f..."
-            aws ecs register-task-definition --cli-input-json "file://$f"
-          done
-
-      - name: Update ECS services (rolling deploy)
-        run: |
-          for svc in api-gateway identity-rbac-service patient-service emr-service pharmacy-service billing-service analytics-service; do
-            task_family="mediflow-${svc}"
-            echo "Updating $svc with task family $task_family..."
-            aws ecs update-service \
-              --cluster "${{ vars.ECS_CLUSTER }}" \
-              --service "$svc" \
-              --task-definition "$task_family" \
-              --force-new-deployment \
-              --desired-count 3 || echo "Service $svc not found, skipping"
-          done
-
-      - name: Wait for deployment stability
-        run: |
-          aws ecs wait services-stable \
+          node scripts/ecs-deploy.mjs \
             --cluster "${{ vars.ECS_CLUSTER }}" \
-            --services api-gateway || echo "api-gateway stability wait skipped"
+            --registry "${{ vars.ECR_REGISTRY }}" \
+            --account "${{ vars.AWS_ACCOUNT_ID }}" \
+            --tag "${{ github.sha }}" \
+            --desired-count 3

@@ -1,0 +1,54 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: api-gateway
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api-gateway.mediflow.local:3000"]
+
+  - job_name: identity-rbac-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["identity-rbac-service.mediflow.local:3001"]
+
+  - job_name: patient-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["patient-service.mediflow.local:3002"]
+
+  - job_name: appointment-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["appointment-service.mediflow.local:3003"]
+
+  - job_name: emr-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["emr-service.mediflow.local:3004"]
+
+  - job_name: clinical-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["clinical-service.mediflow.local:3005"]
+
+  - job_name: lab-radiology-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["lab-radiology-service.mediflow.local:3006"]
+
+  - job_name: pharmacy-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["pharmacy-service.mediflow.local:3007"]
+
+  - job_name: billing-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["billing-service.mediflow.local:3008"]
+
+  - job_name: analytics-service
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["analytics-service.mediflow.local:3009"]

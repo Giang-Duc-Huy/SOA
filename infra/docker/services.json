@@ -1,0 +1,17 @@
+{
+  "services": [
+    { "name": "identity-rbac-service", "dockerfile": "services/identity-rbac-service/Dockerfile" },
+    { "name": "api-gateway", "dockerfile": "services/api-gateway/Dockerfile" },
+    { "name": "patient-service", "dockerfile": "services/patient-service/Dockerfile" },
+    { "name": "appointment-service", "dockerfile": "services/appointment-service/Dockerfile" },
+    { "name": "emr-service", "dockerfile": "services/emr-service/Dockerfile" },
+    { "name": "clinical-service", "dockerfile": "services/clinical-service/Dockerfile" },
+    { "name": "lab-radiology-service", "dockerfile": "services/lab-radiology-service/Dockerfile" },
+    { "name": "pharmacy-service", "dockerfile": "services/pharmacy-service/Dockerfile" },
+    { "name": "billing-service", "dockerfile": "services/billing-service/Dockerfile" },
+    { "name": "analytics-service", "dockerfile": "services/analytics-service/Dockerfile" },
+    { "name": "frontend", "dockerfile": "frontend/Dockerfile" },
+    { "name": "prometheus", "dockerfile": "infra/observability/Dockerfile.prometheus" },
+    { "name": "grafana", "dockerfile": "infra/observability/Dockerfile.grafana" }
+  ]
+}
