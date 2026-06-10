@@ -1,7 +1,7 @@
 /** Stop all HMS dev services by killing processes on known ports */
 import { execSync } from "child_process";
 
-const PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 5173, 5174];
+const PORTS = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 5173, 5174, 9090, 3030];
 
 if (process.platform === "win32") {
   for (const port of PORTS) {

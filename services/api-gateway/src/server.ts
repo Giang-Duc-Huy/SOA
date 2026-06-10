@@ -55,13 +55,13 @@ async function main() {
         target: `${route.target}${route.path}`,
         changeOrigin: true,
         on: {
-          proxyReq: (proxyReq, req, res) => {
+          proxyReq: (proxyReq, req) => {
             logger.debug("Proxying request", {
               method: req.method,
               path: req.url,
               target: route.target,
             });
-            fixRequestBody(proxyReq, req, res);
+            fixRequestBody(proxyReq, req);
           },
           error: (err, _req, res) => {
             logger.error("Proxy error", { error: err.message, target: route.target });

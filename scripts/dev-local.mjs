@@ -39,13 +39,20 @@ async function main() {
   await run("node", ["scripts/wait-postgres.mjs"]);
   console.log("[postgres] Ready\n");
 
-  console.log("[2/6] Starting Kafka cluster (docker)...");
+  console.log("[2/7] Starting Kafka cluster (docker)...");
   await run("node", ["scripts/start-kafka.mjs"]);
 
-  console.log("[3/6] Setting up environment...");
+  console.log("[3/7] Starting observability (Prometheus + Grafana)...");
+  try {
+    await run("node", ["scripts/start-observability.mjs"]);
+  } catch (err) {
+    console.warn("[obs] Observability start failed:", err.message);
+  }
+
+  console.log("[4/7] Setting up environment...");
   await run("node", ["scripts/setup-env.mjs"]);
 
-  console.log("[4/6] Pushing database schemas...");
+  console.log("[5/7] Pushing database schemas...");
   try {
     await run("npm", ["run", "db:push:all"]);
   } catch (err) {
@@ -53,7 +60,7 @@ async function main() {
     console.warn("[db] Continuing — if services fail, stop all node processes and retry");
   }
 
-  console.log("[5/6] Seeding dev sample data...");
+  console.log("[6/7] Seeding dev sample data...");
   try {
     await run("node", ["scripts/sync-doctor-permissions.mjs"]);
     await run("node", ["scripts/seed-dev-data.mjs"]);
@@ -61,7 +68,7 @@ async function main() {
     console.warn("[seed] Skipped:", err.message);
   }
 
-  console.log("[6/6] Starting all services + frontend...\n");
+  console.log("[7/7] Starting all services + frontend...\n");
 
   const services = [
     ["identity", "npm run dev -w identity-rbac-service"],

@@ -1,3 +1,4 @@
+import { initTelemetry } from "@hm/telemetry";
 import { createApp } from "./app.js";
 import { startConsumer } from "./kafka/consumer.js";
 
@@ -5,6 +6,7 @@ const PORT = Number(process.env.PORT ?? 3007);
 const SERVICE_NAME = process.env.SERVICE_NAME ?? "pharmacy-service";
 
 async function main() {
+  initTelemetry({ serviceName: SERVICE_NAME });
   const app = createApp();
 
   app.listen(PORT, () => {

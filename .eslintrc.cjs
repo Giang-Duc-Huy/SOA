@@ -6,7 +6,13 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
   ],
-  ignorePatterns: ["dist/", "node_modules/", "frontend/dist/"],
+  ignorePatterns: [
+    "dist/",
+    "node_modules/",
+    "frontend/dist/",
+    "**/src/generated/**",
+    ".tools/",
+  ],
   env: { node: true, es2022: true },
   rules: {
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
