@@ -43,15 +43,35 @@ aws ecs register-task-definition --cli-input-json file://infra/aws/task-definiti
 aws ecs create-service --cli-input-json file://infra/aws/ecs-services.json
 ```
 
-## GitHub Actions Secrets
+## GitHub Actions (CI/CD)
+
+Workflow: `.github/workflows/ci.yml`
+
+| Job | Runs when |
+|-----|-----------|
+| Lint, Test & Build | Every push / pull request |
+| Build & Push Docker Images | After build passes (PR: build only, no push) |
+| Deploy Staging | Push to `develop` with AWS variables configured |
+| Deploy Production | Push to `main` with AWS variables configured |
+
+### Repository Variables (`Settings → Secrets and variables → Actions → Variables`)
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `AWS_ACCOUNT_ID` | `123456789012` | AWS account ID |
+| `ECR_REGISTRY` | `123456789012.dkr.ecr.ap-southeast-1.amazonaws.com` | ECR registry URL |
+| `ECS_CLUSTER` | `mediflow-cluster` | ECS cluster name |
+| `AWS_REGION` | `ap-southeast-1` | Optional AWS region |
+
+### Repository Secrets
 
 | Secret | Description |
 |--------|-------------|
-| `AWS_ACCESS_KEY_ID` | IAM user access key |
-| `AWS_SECRET_ACCESS_KEY` | IAM user secret |
-| `AWS_REGION` | e.g. `ap-southeast-1` |
-| `ECS_CLUSTER` | ECS cluster name |
-| `JWT_SECRET` | Production JWT secret |
+| `AWS_ACCESS_KEY_ID` | IAM access key (ECR push + ECS deploy) |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
+| `JWT_SECRET` | Production JWT secret (Secrets Manager / task definition) |
+
+If AWS is not configured yet, **Lint/Build** and **Docker build** still run; **Deploy** jobs are skipped.
 
 ## Environment Variables (per service)
 

@@ -36,7 +36,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc -b",
-    "test": "npm run test -ws --if-present"
+    "test": "npm run test -ws --if-present",
+    "ci:verify": "node scripts/verify-ci.mjs"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
